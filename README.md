@@ -1,2 +1,7 @@
-# edu-ntnu-idatt2502
+# idatt2502 - Applied Machine Learning
 Applied Machine Learning
+
+Anvendt maskinlæring
+
+
+
