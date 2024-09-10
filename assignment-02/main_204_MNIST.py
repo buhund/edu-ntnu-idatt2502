@@ -14,7 +14,7 @@ transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5
 trainset = torchvision.datasets.MNIST(root=data_path, train=True, download=True, transform=transform)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=32, shuffle=True)
 
-# Defining the model
+# Define model, MNIST and softmax
 class MNISTModel(nn.Module):
     def __init__(self):
         super(MNISTModel, self).__init__()
@@ -28,7 +28,7 @@ class MNISTModel(nn.Module):
 
 model = MNISTModel()
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(model.parameters(), lr=0.1)
+optimizer = optim.SGD(model.parameters(), lr=0.1)  # SGD vs Adam?
 
 # Train the model
 epochs = 5

@@ -1,77 +1,223 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import axes3d, art3d
 
-# Input and target tensors representing the truth table for the XOR operator
-# XOR Truth Table:
-# Input: (0, 0) -> Output: 0
-# Input: (0, 1) -> Output: 1
-# Input: (1, 0) -> Output: 1
-# Input: (1, 1) -> Output: 0
-inputs = torch.tensor([[0., 0.], [0., 1.], [1., 0.], [1., 1.]])  # 4 input samples (2D inputs)
-targets = torch.tensor([[0.], [1.], [1.], [0.]])  # XOR output
+matplotlib.rcParams.update({'font.size': 12, 'figure.figsize': (14, 8)})
 
-# Define a neural network model to learn the XOR operation with one hidden layer
-class XORModel(nn.Module):
-    def __init__(self):
-        super(XORModel, self).__init__()
-        # Hidden layer: Takes 2 inputs and maps them to 2 outputs
-        self.hidden = nn.Linear(2, 2)
-        # Output layer: Takes 2 inputs from the hidden layer and outputs 1 value (binary output)
-        self.output = nn.Linear(2, 1)
+W1_init = np.array([[10.0, -10.0], [10.0, -10.0]])
+b1_init = np.array([[-5.0, 15.0]])
+W2_init = np.array([[10.0], [10.0]])
+b2_init = np.array([[-15.0]])
 
-    # Define the forward pass of the network
-    def forward(self, x):
-        # Apply sigmoid activation after the hidden layer to introduce non-linearity
-        x = torch.sigmoid(self.hidden(x))
-        # Apply sigmoid activation to the output as well for binary classification
-        return torch.sigmoid(self.output(x))
+# Also try:
+# W1_init = np.array([[7.43929911, 5.68582106], [7.44233704, 5.68641663]])
+# b1_init = np.array([[-3.40935969, -8.69532299]])
+# W2_init = np.array([[13.01280117], [-13.79168701]])
+# b2_init = np.array([[-6.1043458]])
 
-# Instantiate the XOR model
-model = XORModel()
 
-# Initialize the weights of the hidden and output layers with random values
-# Random initialization helps with breaking symmetry during training
-model.hidden.weight.data = torch.Tensor(np.random.uniform(-1, 1, (2, 2)))
-model.output.weight.data = torch.Tensor(np.random.uniform(-1, 1, (1, 2)))
+def sigmoid(t):
+    return 1 / (1 + np.exp(-t))
 
-# Define the loss function
-# BCELoss is used here because we have binary output values
-criterion = nn.BCELoss()
 
-# Define the optimizer
-# Using Stochastic Gradient Descent (SGD) to update the model's weights
-# Learning rate is set to 0.1 to control the step size during optimization
-optimizer = optim.SGD(model.parameters(), lr=0.1)
+class SigmoidModel:
+    def __init__(self, W1=W1_init.copy(), W2=W2_init.copy(), b1=b1_init.copy(), b2=b2_init.copy()):
+        self.W1 = W1
+        self.W2 = W2
+        self.b1 = b1
+        self.b2 = b2
 
-# Training the model
-epochs = 10000  # Number of iterations over the dataset
-losses = []  # List to store loss values at each epoch
+    # First layer function
+    def f1(self, x):
+        return sigmoid(x @ self.W1 + self.b1)
 
-# Loop through each epoch to train the model
-for epoch in range(epochs):
-    optimizer.zero_grad()  # Reset the gradients from the previous step
+    # Second layer function
+    def f2(self, h):
+        return sigmoid(h @ self.W2 + self.b2)
 
-    # Forward pass: Compute the model's predictions for the inputs
-    outputs = model(inputs)
+    # Predictor
+    def f(self, x):
+        return self.f2(self.f1(x))
 
-    # Compute the loss between the predicted outputs and the actual targets
-    loss = criterion(outputs, targets)
+    # Uses Cross Entropy
+    def loss(self, x, y):
+        return -np.mean(np.multiply(y, np.log(self.f(x))) + np.multiply((1 - y), np.log(1 - self.f(x))))
 
-    # Backward pass: Compute the gradients of the loss with respect to model's parameters
-    loss.backward()
 
-    # Update the model's parameters (weights) using the optimizer
-    optimizer.step()
+model = SigmoidModel()
 
-    # Store the loss value for this epoch to visualize later
-    losses.append(loss.item())
+# Observed/training input and output
+x_train = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+y_train = np.array([[0], [1], [1], [0]])
 
-# Plot the loss over time to visualize how the model's performance improved
-plt.plot(losses)
-plt.title('Loss for XOR-model')  # Title of the plot
-plt.xlabel('Epochs')             # Label for the x-axis
-plt.ylabel('Loss')               # Label for the y-axis
+fig = plt.figure("Logistic regression: the logical XOR operator")
+
+plot1 = fig.add_subplot(131, projection='3d')
+
+plot1.plot_wireframe(
+    np.array([[]]),
+    np.array([[]]),
+    np.array([[]]),
+    color="green",
+    label="$\\mathbf{h}=\\mathrm{f1}(\\mathbf{x})=\\sigma(\\mathbf{x W1}+\\mathbf{b1})$",
+)
+plot1_h1 = plot1.plot_wireframe(np.array([[]]), np.array([[]]), np.array([[]]))
+plot1_h2 = plot1.plot_wireframe(np.array([[]]), np.array([[]]), np.array([[]]))
+
+plot1_info = fig.text(0.15, 0.9, "")
+
+plot1.set_xlabel("$x_1$")
+plot1.set_ylabel("$x_2$")
+plot1.set_zlabel("$h_1,h_2$")
+plot1.legend(loc="upper left")
+plot1.set_xticks([0, 1])
+plot1.set_yticks([0, 1])
+plot1.set_zticks([0, 1])
+plot1.set_xlim(-0.25, 1.25)
+plot1.set_ylim(-0.25, 1.25)
+plot1.set_zlim(-0.25, 1.25)
+
+plot2 = fig.add_subplot(132, projection='3d')
+
+plot2_f2 = plot2.plot_wireframe(np.array([[]]), np.array([[]]), np.array([[]]), color="green", label="$\\mathrm{f2}(\\mathbf{h})=\\sigma(\\mathbf{h W2}+b2)$")
+
+plot2_info = fig.text(0.45, 0.9, "")
+
+plot2.set_xlabel("$h_1$")
+plot2.set_ylabel("$h_2$")
+plot2.set_zlabel("$y$")
+plot2.legend(loc="upper left")
+plot2.set_xticks([0, 1])
+plot2.set_yticks([0, 1])
+plot2.set_zticks([0, 1])
+plot2.set_xlim(-0.25, 1.25)
+plot2.set_ylim(-0.25, 1.25)
+plot2.set_zlim(-0.25, 1.25)
+
+plot3 = fig.add_subplot(133, projection='3d')
+
+plot3_f = plot3.plot_wireframe(np.array([[]]), np.array([[]]), np.array([[]]), color="green", label="$f(\\mathbf{x})=\\mathrm{f2}(\\mathrm{f1}(\\mathbf{x}))$")
+
+plot3.plot(x_train[:, 0].squeeze(), x_train[:, 1].squeeze(), y_train[:, 0].squeeze(), 'o', label="$(x_1^{(i)}, x_2^{(i)}, y^{(i)})$", color="blue")
+
+plot3_info = fig.text(0.15, 0.04, "")
+
+plot3.set_xlabel("$x_1$")
+plot3.set_ylabel("$x_2$")
+plot3.set_zlabel("$y$")
+plot3.legend(loc="upper left")
+plot3.set_xticks([0, 1])
+plot3.set_yticks([0, 1])
+plot3.set_zticks([0, 1])
+plot3.set_xlim(-0.25, 1.25)
+plot3.set_ylim(-0.25, 1.25)
+plot3.set_zlim(-0.25, 1.25)
+
+table = plt.table(
+    cellText=[[0, 0, 0], [0, 1, 0], [1, 0, 0], [1, 1, 0]],
+    colWidths=[0.15] * 3,
+    colLabels=["$x_1$", "$x_2$", "$f(\\mathbf{x})$"],
+    cellLoc="center",
+    bbox=[0.925, -0.2, 0.4, 0.4]
+)
+
+
+def update_figure(event=None):
+    if (event is not None):
+        if event.key == "W":
+            model.W1[0, 0] += 0.2
+        elif event.key == "w":
+            model.W1[0, 0] -= 0.2
+        elif event.key == "E":
+            model.W1[0, 1] += 0.2
+        elif event.key == "e":
+            model.W1[0, 1] -= 0.2
+        elif event.key == "R":
+            model.W1[1, 0] += 0.2
+        elif event.key == "r":
+            model.W1[1, 0] -= 0.2
+        elif event.key == "T":
+            model.W1[1, 1] += 0.2
+        elif event.key == "t":
+            model.W1[1, 1] -= 0.2
+
+        elif event.key == "Y":
+            model.W2[0, 0] += 0.2
+        elif event.key == "y":
+            model.W2[0, 0] -= 0.2
+        elif event.key == "U":
+            model.W2[1, 0] += 0.2
+        elif event.key == "u":
+            model.W2[1, 0] -= 0.2
+
+        elif event.key == "B":
+            model.b1[0, 0] += 0.2
+        elif event.key == "b":
+            model.b1[0, 0] -= 0.2
+        elif event.key == "N":
+            model.b1[0, 1] += 0.2
+        elif event.key == "n":
+            model.b1[0, 1] -= 0.2
+
+        elif event.key == "M":
+            model.b2[0, 0] += 0.2
+        elif event.key == "m":
+            model.b2[0, 0] -= 0.2
+
+        elif event.key == "c":
+            model.W1 = W1_init.copy()
+            model.W2 = W2_init.copy()
+            model.b1 = b1_init.copy()
+            model.b2 = b2_init.copy()
+
+    global plot1_h1, plot1_h2, plot2_f2, plot3_f
+    plot1_h1.remove()
+    plot1_h2.remove()
+    plot2_f2.remove()
+    plot3_f.remove()
+    x1_grid, x2_grid = np.meshgrid(np.linspace(-0.25, 1.25, 10), np.linspace(-0.25, 1.25, 10))
+    h1_grid = np.empty([10, 10])
+    h2_grid = np.empty([10, 10])
+    f2_grid = np.empty([10, 10])
+    f_grid = np.empty([10, 10])
+    for i in range(0, x1_grid.shape[0]):
+        for j in range(0, x1_grid.shape[1]):
+            h = model.f1([[x1_grid[i, j], x2_grid[i, j]]])
+            h1_grid[i, j] = h[0, 0]
+            h2_grid[i, j] = h[0, 1]
+            f2_grid[i, j] = model.f2([[x1_grid[i, j], x2_grid[i, j]]])
+            f_grid[i, j] = model.f([[x1_grid[i, j], x2_grid[i, j]]])
+
+    plot1_h1 = plot1.plot_wireframe(x1_grid, x2_grid, h1_grid, color="lightgreen")
+    plot1_h2 = plot1.plot_wireframe(x1_grid, x2_grid, h2_grid, color="darkgreen")
+
+    plot1_info.set_text(
+        "$\\mathbf{W1}=\\left[\\genfrac{}{}{0}{}{%.2f}{%.2f}\\/\\genfrac{}{}{0}{}{%.2f}{%.2f}\\right]$\n$\\mathbf{b1}=[{%.2f}, {%.2f}]$" %
+        (model.W1[0, 0], model.W1[1, 0], model.W1[0, 1], model.W1[1, 1], model.b1[0, 0], model.b1[0, 1])
+    )
+
+    plot2_f2 = plot2.plot_wireframe(x1_grid, x2_grid, f2_grid, color="green")
+
+    plot2_info.set_text("$\\mathbf{W2}=\\genfrac{[}{]}{0}{}{%.2f}{%.2f}$\nb2$=[{%.2f}]$" % (model.W2[0, 0], model.W2[1, 0], model.b2[0, 0]))
+
+    plot3_f = plot3.plot_wireframe(x1_grid, x2_grid, f_grid, color="green")
+
+    plot3_info.set_text(
+        "$loss = -\\frac{1}{N}\\sum_{i=1}^{N}\\left [ y^{(i)} \\log\\/f(\\mathbf{x}^{(i)}) + (1-y^{(i)}) \\log (1-f(\\mathbf{x}^{(i)})) \\right ] = %.2f$" %
+        model.loss(x_train, y_train)
+    )
+
+    table._cells[(1, 2)]._text.set_text("${%.1f}$" % model.f([[0, 0]]))
+    table._cells[(2, 2)]._text.set_text("${%.1f}$" % model.f([[0, 1]]))
+    table._cells[(3, 2)]._text.set_text("${%.1f}$" % model.f([[1, 0]]))
+    table._cells[(4, 2)]._text.set_text("${%.1f}$" % model.f([[1, 1]]))
+
+    plt.pause(0.01)
+    fig.canvas.draw()
+
+
+update_figure()
+fig.canvas.mpl_connect('key_press_event', update_figure)
+
 plt.show()

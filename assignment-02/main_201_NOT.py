@@ -1,69 +1,77 @@
-import torch
-import torch.nn as nn
-import torch.optim as optim
+import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
-# Input and target tensors representing the truth table for the NOT operator
-# Input: 0 -> Output: 1
-# Input: 1 -> Output: 0
-inputs = torch.tensor([[0.], [1.]])   # Inputs are single-element tensors (0 and 1)
-targets = torch.tensor([[1.], [0.]])  # Corresponding targets are their logical NOT (1 and 0)
+# Sigmoid function
+def sigmoid(t):
+    return 1 / (1 + np.exp(-t))
 
-# Define the neural network model for learning the NOT operator
-class NOTModel(nn.Module):
+# Model for NOT-operator
+class SigmoidModel:
     def __init__(self):
-        super(NOTModel, self).__init__()
-        # The model consists of a single linear layer
-        # This takes a single input and produces a single output
-        self.linear = nn.Linear(1, 1)
+        # Initializing weight and bias
+        self.W = np.array([[-10.0]])  # Weight for separation
+        self.b = np.array([[5.0]])    # Bias to promote desired output.
 
-    # The forward function defines how the data flows through the model
-    # Here, we apply the linear transformation followed by a sigmoid activation
-    def forward(self, x):
-        # The sigmoid function squashes the output to be between 0 and 1
-        # This is useful for binary classification tasks
-        return torch.sigmoid(self.linear(x))
+    # Predictor
+    def f(self, x):
+        return sigmoid(x @ self.W + self.b)
 
-# Instantiate the model
-model = NOTModel()
+    # Use Cross Entropy as loss function
+    def loss(self, x, y):
+        return -np.mean(np.multiply(y, np.log(self.f(x))) + np.multiply((1 - y), np.log(1 - self.f(x))))
 
-# Define the loss function
-# Binary Cross Entropy Loss (BCELoss) is used for binary classification tasks
-# It calculates how far off the predicted output is from the target for each input
-criterion = nn.BCELoss()
+model = SigmoidModel()
 
-# Define the optimizer
-# We're using Stochastic Gradient Descent (SGD) to update the model's weights
-# 'model.parameters()' passes the model's weights to the optimizer
-# lr (learning rate) controls the step size during optimization
-optimizer = optim.SGD(model.parameters(), lr=0.1)
+# Input (x) and output (y) for NOT-operator, 01 10 as per lecture.
+x_train = np.array([[0], [1]])
+y_train = np.array([[1], [0]])
 
-# Training the model
-epochs = 1000  # The number of iterations over the dataset
-losses = []  # List to store the loss at each epoch
+# 3D plot (I hope)
+fig = plt.figure("Logistic regression: the logical NOT operator")
 
-# Loop through each epoch
-for epoch in range(epochs):
-    optimizer.zero_grad()  # Reset the gradients from the previous step
+plot1 = fig.add_subplot(111, projection='3d')
 
-    # Forward pass: Compute the model's predictions for the inputs
-    outputs = model(inputs)
+# Plot training data
+plot1.scatter(x_train[:, 0].squeeze(), x_train[:, 0].squeeze(), y_train[:, 0].squeeze(), color="blue", label="Training data")
 
-    # Compute the loss between the model's predictions (outputs) and the actual targets
-    loss = criterion(outputs, targets)
+plot1.set_xlabel("$x$")
+plot1.set_ylabel("$x$")
+plot1.set_zlabel("$y$")
+plot1.legend(loc="upper left")
+plot1.set_xticks([0, 1])
+plot1.set_yticks([0, 1])
+plot1.set_zticks([0, 1])
+plot1.set_xlim(-0.25, 1.25)
+plot1.set_ylim(-0.25, 1.25)
+plot1.set_zlim(-0.25, 1.25)
 
-    # Backward pass: Compute the gradients of the loss with respect to the model's parameters
-    loss.backward()
+def update_figure():
+    x_grid = np.linspace(-0.25, 1.25, 50)
+    x1_grid, x2_grid = np.meshgrid(x_grid, x_grid)
+    y_grid = model.f(x1_grid.reshape(-1, 1)).reshape(x1_grid.shape)
 
-    # Update the model's parameters (weights) using the optimizer
-    optimizer.step()
+    plot1.clear()
 
-    # Store the loss value for later visualization
-    losses.append(loss.item())
+    plot1.scatter(x_train[:, 0].squeeze(), x_train[:, 0].squeeze(), y_train[:, 0].squeeze(), color="blue", label="Training data")
 
-# Plot the loss over time to visualize training
-plt.plot(losses)
-plt.title('Loss for NOT-model')  # Title of the graph
-plt.xlabel('Epochs')             # X-axis label
-plt.ylabel('Loss')               # Y-axis label
+    plot1.plot_wireframe(x1_grid, x2_grid, y_grid, alpha=0.6)
+
+    # Oppdaterer aksene
+    plot1.set_xlabel("$x$")
+    plot1.set_ylabel("$x$")
+    plot1.set_zlabel("$y$")
+    plot1.set_xticks([0, 1])
+    plot1.set_yticks([0, 1])
+    plot1.set_zticks([0, 1])
+    plot1.set_xlim(-0.25, 1.25)
+    plot1.set_ylim(-0.25, 1.25)
+    plot1.set_zlim(-0.25, 1.25)
+    plot1.set_title(f"W = {model.W[0, 0]:.2f}, b = {model.b[0, 0]:.2f}, Loss = {model.loss(x_train, y_train):.2f}")
+
+    plt.pause(0.01)
+    fig.canvas.draw()
+
+# Visualiserer modellen etter optimalisering
+update_figure()
 plt.show()
