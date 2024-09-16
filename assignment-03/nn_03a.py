@@ -1,3 +1,5 @@
+# Assignment 03, exercise a
+
 import torch
 import torch.nn as nn
 import torchvision
@@ -46,6 +48,7 @@ class ConvolutionalNeuralNetworkModel(nn.Module):
         x = self.pool1(torch.relu(self.conv1(x)))  # 1st Conv -> ReLU -> Pool
         x = self.pool2(torch.relu(self.conv2(x)))  # 2nd Conv -> ReLU -> Pool
 
+
         x = x.reshape(-1, 64 * 7 * 7)  # Flatten the tensor for the dense layer
         x = torch.relu(self.dense(x))  # Dense layer with ReLU
         return self.out(x)  # Output layer
@@ -76,4 +79,5 @@ for epoch in range(20):
         loss.backward()  # Compute loss gradients
         optimizer.step()  # Perform optimization by adjusting W and b
 
+    # print("accuracy = %s" % model.accuracy(x_test, y_test))
     print(f"Epoch {epoch + 1}, accuracy = {model.accuracy(x_test, y_test).item() * 100:.2f}%")

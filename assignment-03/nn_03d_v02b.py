@@ -5,15 +5,15 @@ import torch.nn as nn
 import torchvision
 
 # Load observations from the mnist dataset. The observations are divided into a training set and a test set
-mnist_train = torchvision.datasets.MNIST('./data', train=True, download=True)
-x_train = mnist_train.data.reshape(-1, 1, 28, 28).float()  # Reshape data for Conv2D input
-y_train = torch.zeros((mnist_train.targets.shape[0], 10))  # Create output tensor
-y_train[torch.arange(mnist_train.targets.shape[0]), mnist_train.targets] = 1  # Populate output
+mnist_train_fashion = torchvision.datasets.FashionMNIST('./data/fashion', train=True, download=True)
+x_train = mnist_train_fashion.data.reshape(-1, 1, 28, 28).float()  # Reshape data for Conv2D input
+y_train = torch.zeros((mnist_train_fashion.targets.shape[0], 10))  # Create output tensor
+y_train[torch.arange(mnist_train_fashion.targets.shape[0]), mnist_train_fashion.targets] = 1  # Populate output
 
-mnist_test = torchvision.datasets.MNIST('./data', train=False, download=True)
-x_test = mnist_test.data.reshape(-1, 1, 28, 28).float()  # Reshape data for Conv2D input
-y_test = torch.zeros((mnist_test.targets.shape[0], 10))  # Create output tensor
-y_test[torch.arange(mnist_test.targets.shape[0]), mnist_test.targets] = 1  # Populate output
+mnist_test_fashion = torchvision.datasets.FashionMNIST('./data/fashion', train=False, download=True)
+x_test = mnist_test_fashion.data.reshape(-1, 1, 28, 28).float()  # Reshape data for Conv2D input
+y_test = torch.zeros((mnist_test_fashion.targets.shape[0], 10))  # Create output tensor
+y_test[torch.arange(mnist_test_fashion.targets.shape[0]), mnist_test_fashion.targets] = 1  # Populate output
 
 # Normalization of inputs
 mean = x_train.mean()
@@ -85,3 +85,8 @@ for epoch in range(20):
 
     # print("accuracy = %s" % model.accuracy(x_test, y_test))
     print(f"Epoch {epoch + 1}, accuracy = {model.accuracy(x_test, y_test).item() * 100:.2f}%")
+
+
+# Model: B
+# Epochs: 20
+# Accuracy for FashionMNIST:
