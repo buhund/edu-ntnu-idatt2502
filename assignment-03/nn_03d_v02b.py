@@ -89,4 +89,4 @@ for epoch in range(20):
 
 # Model: B
 # Epochs: 20
-# Accuracy for FashionMNIST:
+# Accuracy for FashionMNIST: 91,53%
