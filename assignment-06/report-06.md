@@ -1,4 +1,4 @@
-## IDATT2502 Exercise 06 answer
+## IDATT2502 - Exercise 06 - Dimension Reduction
 
 ### Part 1
 
