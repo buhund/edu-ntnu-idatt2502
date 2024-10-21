@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 print("Running the BlackJack Agent learning environment: ")
 
+# Defining the BlackJack Agent class.
 class BlackjackAgent:
     def __init__(
             self,
@@ -31,10 +32,12 @@ class BlackjackAgent:
             discount_factor: The discount factor for computing the Q-value
         """
         self.env = env
+        # Q-Values: Store the value of each action in each state. Initialized to zero.
         self.q_values = defaultdict(lambda: np.zeros(env.action_space.n))
 
-        self.lr = learning_rate
-        self.discount_factor = discount_factor
+        self.lr = learning_rate # Learning rate for Q-value updates.
+        self.discount_factor = discount_factor # Discount for future rewards.
+
 
         self.epsilon = initial_epsilon
         self.epsilon_decay = epsilon_decay
