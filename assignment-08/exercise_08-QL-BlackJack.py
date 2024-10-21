@@ -2,10 +2,15 @@
 # https://gymnasium.farama.org/introduction/train_agent/
 # Using Gymnasium and Q-Learning
 
-from collections import defaultdict
+from collections import defaultdict, deque
 import gymnasium as gym
 import numpy as np
 from tqdm import tqdm
+
+# Track performance over the last N episodes
+reward_window_size = 100  # Moving window size for average reward
+reward_history = deque(maxlen=reward_window_size)  # Stores rewards for the last N episodes
+
 
 print("Running the BlackJack Agent learning environment: ")
 
@@ -103,8 +108,9 @@ agent = BlackjackAgent(
 for episode in tqdm(range(n_episodes)):
     obs, info = env.reset()
     done = False
+    total_reward = 0 # Track the total reward for this episode.
 
-    # play one episode
+# play one episode
     while not done:
         action = agent.get_action(obs)
         next_obs, reward, terminated, truncated, info = env.step(action)
@@ -116,4 +122,16 @@ for episode in tqdm(range(n_episodes)):
         done = terminated or truncated
         obs = next_obs
 
+        # Accumulate the reward for this episode
+        total_reward += reward
+
+
+    # Store the total reward for this episode
+    reward_history.append(total_reward)
+
     agent.decay_epsilon()
+
+    # Every 100 episodes, print the average reward over the last 100 episodes
+    if episode % 1000 == 0 and episode > 0:
+        average_reward = np.mean(reward_history)
+        print(f"Episode {episode}, Average Reward (last {reward_window_size} episodes): {average_reward:.2f}, Epsilon: {agent.epsilon:.2f}")

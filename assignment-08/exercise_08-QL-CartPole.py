@@ -1,12 +1,17 @@
 # Basic CartPole env
 # Using Gymnasium and Q-Learning
 
+from collections import defaultdict, deque
 import gymnasium as gym
 import torch
 import torch.nn as nn
 import numpy as np
 import random
 import torch.optim as optim
+
+# Track performance over the last N episodes
+reward_window_size = 100  # Moving window size for average reward
+reward_history = deque(maxlen=reward_window_size)  # Stores rewards for the last N episodes
 
 print("Running the CartPole Agent learning environment: ")
 
@@ -87,10 +92,14 @@ for episode in range(episodes):
         # Move to the next state
         state = next_state
 
+    reward_history.append(total_reward)
+
+
     # Decay epsilon to reduce exploration over time
     if epsilon > epsilon_min:
         epsilon *= epsilon_decay
 
     print(f"Episode {episode+1}/{episodes}, Total Reward: {total_reward}")
+
 
 env.close()  # Close the environment after training is done

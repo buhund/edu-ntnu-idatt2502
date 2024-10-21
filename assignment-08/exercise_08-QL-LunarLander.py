@@ -133,18 +133,18 @@ class LunarLanderAgent:
         self.epsilon = max(self.final_epsilon, self.epsilon - self.epsilon_decay)
 
 
-# Hyperparameters for the Q-learning agent
-learning_rate = 0.01  # Learning rate (alpha)
-n_episodes = 100_0  # Total number of episodes for training
-start_epsilon = 1.0  # Initial epsilon (exploration rate)
-epsilon_decay = start_epsilon / (n_episodes / 2)  # Epsilon decay rate (reduce exploration over time)
-final_epsilon = 0.1  # Minimum epsilon (ensures some exploration continues)
+# Hyperparameters for the Q-learning agent.
+learning_rate = 0.01  # Learning rate (alpha).
+n_episodes = 100_00  # Total number of episodes for training.
+start_epsilon = 1.0  # Initial epsilon (exploration rate).
+epsilon_decay = start_epsilon / (n_episodes / 2)  # Epsilon decay rate (reduce exploration over time).
+final_epsilon = 0.1  # Minimum epsilon (ensures some exploration continues).
 
 # Initialize the LunarLander environment (with or without graphics)
 # With render_mode="human", the environment shows graphics, which can slow down training.
-# To speed up training, omit the render_mode or set it to None.
-# env = gym.make("LunarLander-v3", render_mode="human")  # With graphics (slower)
-env = gym.make("LunarLander-v3")  # Without graphics (faster)
+# To speed up training, omit the render_mode or set it to "none".
+#env = gym.make("LunarLander-v3", render_mode="human")  # With graphics (slower).
+env = gym.make("LunarLander-v3", render_mode="none")  # Without graphics (faster).
 
 # Wrapper to keep track of episode statistics (e.g., rewards) during training
 env = gym.wrappers.RecordEpisodeStatistics(env)
@@ -158,13 +158,13 @@ agent = LunarLanderAgent(
     final_epsilon=final_epsilon,  # Minimum epsilon value for exploration
 )
 
-# Main training loop for the Q-learning agent
-for episode in tqdm(range(n_episodes)):  # tqdm provides a progress bar for the loop
-    obs, info = env.reset()  # Reset the environment to start a new episode
-    done = False  # Track whether the episode has finished
-    total_reward = 0 # Track the total reward for this episode
+# Main training loop for the Q-learning agent.
+for episode in tqdm(range(n_episodes)):  # tqdm provides a progress bar for the loop.
+    obs, info = env.reset()  # Reset the environment to start a new episode.
+    done = False  # Track whether the episode has finished.
+    total_reward = 0 # Track the total reward for this episode.
 
-    # Play one episode (loop until the episode ends)
+    # Play one episode (loop until the episode ends).
     while not done:
         action = agent.get_action(obs)  # Get the action to take based on the current state
         next_obs, reward, terminated, truncated, info = env.step(action)  # Take the action in the environment
