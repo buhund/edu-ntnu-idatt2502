@@ -1,4 +1,6 @@
-## IDATT2502 - Exercise 06 - Dimension Reduction
+## IDATT2502 - Exercise 06 - Dimension Reduction in Weka
+
+[Weka](https://waikato.github.io/weka-wiki/)
 
 ### Part 1
 
