@@ -1,7 +1,12 @@
-from collections import defaultdict
+from collections import defaultdict, deque
 import gymnasium as gym
 import numpy as np
 from tqdm import tqdm
+
+# Track performance over the last N episodes
+reward_window_size = 100  # Moving window size for average reward
+reward_history = deque(maxlen=reward_window_size)  # Stores rewards for the last N episodes
+
 
 # Class definition for the LunarLander agent
 class LunarLanderAgent:
@@ -130,7 +135,7 @@ class LunarLanderAgent:
 
 # Hyperparameters for the Q-learning agent
 learning_rate = 0.01  # Learning rate (alpha)
-n_episodes = 100_000  # Total number of episodes for training
+n_episodes = 100_0  # Total number of episodes for training
 start_epsilon = 1.0  # Initial epsilon (exploration rate)
 epsilon_decay = start_epsilon / (n_episodes / 2)  # Epsilon decay rate (reduce exploration over time)
 final_epsilon = 0.1  # Minimum epsilon (ensures some exploration continues)
@@ -157,6 +162,7 @@ agent = LunarLanderAgent(
 for episode in tqdm(range(n_episodes)):  # tqdm provides a progress bar for the loop
     obs, info = env.reset()  # Reset the environment to start a new episode
     done = False  # Track whether the episode has finished
+    total_reward = 0 # Track the total reward for this episode
 
     # Play one episode (loop until the episode ends)
     while not done:
@@ -166,9 +172,20 @@ for episode in tqdm(range(n_episodes)):  # tqdm provides a progress bar for the 
         # Update the agent's Q-value based on the experience
         agent.update(obs, action, reward, terminated, next_obs)
 
+        # Accumulate the reward for this episode
+        total_reward += reward
+
         # Check if the episode is done (either terminated or truncated)
         done = terminated or truncated
         obs = next_obs  # Update the observation to the next state
 
+    # Store the total reward for this episode
+    reward_history.append(total_reward)
+
     # After each episode, decay epsilon to reduce exploration over time
     agent.decay_epsilon()
+
+    # Every 100 episodes, print the average reward over the last 100 episodes
+    if episode % 100 == 0 and episode > 0:
+        average_reward = np.mean(reward_history)
+        print(f"Episode {episode}, Average Reward (last {reward_window_size} episodes): {average_reward:.2f}, Epsilon: {agent.epsilon:.2f}")
